@@ -22,8 +22,28 @@ data "vsphere_datacenter" "dc" {
   name = var.vsphere_vcenter_dc
 }
 
+data "vsphere_host" "host"{
+  name          = var.deployment_host
+  datacenter_id = data.vsphere_datacenter.dc.id
+}
+
 data "vsphere_datastore" "isos"{
   name          = var.vsphere_datastore_isos
+  datacenter_id = data.vsphere_datacenter.dc.id
+}
+
+data "vsphere_datastore" "disks"{
+  name          = var.vsphere_datastore_disks
+  datacenter_id = data.vsphere_datacenter.dc.id
+}
+
+data "vsphere_network" "network"{
+  name          = var.vm_network
+  datacenter_id = data.vsphere_datacenter.dc.id
+}
+
+data "vsphere_virtual_machine" "template"{
+  name          = var.vm_template
   datacenter_id = data.vsphere_datacenter.dc.id
 }
 
@@ -32,3 +52,93 @@ resource "vsphere_folder" "parent" {
   type = "vm"
   datacenter_id = data.vsphere_datacenter.dc.id
 }
+
+resource "vsphere_virtual_machine" "primary_vm"{
+  name          = var.vm_name_base
+  folder        = vsphere_folder.parent.path
+  resource_pool_id = data.vsphere_host.host.resource_pool_id
+  datastore_id  = data.vsphere_datastore.disks.id
+  num_cpus      = data.vsphere_virtual_machine.template.num_cpus
+  memory        = data.vsphere_virtual_machine.template.memory
+  firmware      = data.vsphere_virtual_machine.template.firmware
+  guest_id      = data.vsphere_virtual_machine.template.guest_id
+
+  network_interface {
+    network_id = data.vsphere_network.network.id
+    adapter_type = data.vsphere_virtual_machine.template.network_interface_types[0]
+  }
+
+  disk{
+    label = "${var.vm_name_base}.vmdk"
+    size = data.vsphere_virtual_machine.template.disks.0.size
+    eagerly_scrub = data.vsphere_virtual_machine.template.disks.0.eagerly_scrub
+    thin_provisioned = data.vsphere_virtual_machine.template.disks.0.thin_provisioned
+  }
+
+  clone{
+    template_uuid = data.vsphere_virtual_machine.template.id
+    linked_clone = var.vm_linked_clone
+  }
+
+  lifecycle{
+    ignore_changes = []
+  }
+
+}
+
+resource "vsphere_virtual_machine_snapshot" "primary_vm_snapshot" {
+  virtual_machine_uuid = vsphere_virtual_machine.primary_vm.uuid
+  snapshot_name = "Primary VM"
+  description = "Primary VM Initial State"
+  memory = true
+  quiesce = true
+  remove_children = true
+  consolidate = true
+}
+
+resource "vsphere_virtual_machine" "child_vm"{
+  for_each      = {for each in var.client_list : each.name => each}
+  name          = each.value.name
+  folder        = vsphere_folder.parent.path
+  resource_pool_id = data.vsphere_host.host.resource_pool_id
+  datastore_id  = data.vsphere_datastore.disks.id
+  num_cpus      = data.vsphere_virtual_machine.template.num_cpus
+  memory        = data.vsphere_virtual_machine.template.memory
+  firmware      = data.vsphere_virtual_machine.template.firmware
+  guest_id      = data.vsphere_virtual_machine.template.guest_id
+
+  network_interface {
+    network_id = data.vsphere_network.network.id
+    adapter_type = data.vsphere_virtual_machine.template.network_interface_types[0]
+  }
+
+  disk{
+    label = "${var.vm_name_base}.vmdk"
+    size = data.vsphere_virtual_machine.template.disks.0.size
+    eagerly_scrub = data.vsphere_virtual_machine.template.disks.0.eagerly_scrub
+    thin_provisioned = data.vsphere_virtual_machine.template.disks.0.thin_provisioned
+  }
+
+  clone{
+    template_uuid = vsphere_virtual_machine_snapshot.primary_vm_snapshot.virtual_machine_uuid
+    linked_clone = "true"
+    customize {
+      linux_options {
+        host_name = each.value.hostname
+        domain = "hoidsramenshop.com"
+      }
+      network_interface {
+        ipv4_address = each.value.ip
+        ipv4_netmask = 24
+      }
+      ipv4_gateway = "10.10.50.1"
+
+    }
+  }
+
+  lifecycle{
+    ignore_changes = []
+  }
+
+}
+
