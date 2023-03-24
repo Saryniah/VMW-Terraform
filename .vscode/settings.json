@@ -1,0 +1,16 @@
+{
+    "files.associations": {
+        "*.sops.yaml": "yaml",
+        "*.tf": "terraform",
+        "*.tfvars": "terraform",
+        "*.hcl": "terraform",
+        "*.pkrvars.hcl": "terraform-vars",
+        "*.pkrtpl.hcl": ""
+    },
+    "[terraform]": {
+        "editor.insertSpaces": true,
+        "editor.tabSize": 2,
+        "editor.detectIndentation": false,
+        "editor.defaultFormatter": "hashicorp.terraform"
+    }
+}

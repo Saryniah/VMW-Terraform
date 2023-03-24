@@ -1,3 +1,5 @@
 secrets.json
 *.tfstate
 *.lock.hcl
+*.backup
+*.tfvars

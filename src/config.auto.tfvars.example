@@ -1,0 +1,5 @@
+vsphere_vcenter_url     = ""
+vsphere_vcenter_dc      = ""
+vsphere_datastore_disks = ""
+vsphere_datastore_isos  = ""
+parent_folder_name      = ""
