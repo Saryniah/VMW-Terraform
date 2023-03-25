@@ -1,5 +1,23 @@
-vsphere_vcenter_url     = ""
-vsphere_vcenter_dc      = ""
-vsphere_datastore_disks = ""
-vsphere_datastore_isos  = ""
-parent_folder_name      = ""
+vsphere_vcenter_url     = "vcenter.fqdn.example"
+vsphere_vcenter_dc      = "datacenter_name"
+vsphere_datastore_isos  = "datastore_for_isos"
+vsphere_datastore_disks = "datastore_for_disk_images"
+deployment_host         = "esxi-host.fqdn.example"
+parent_folder_name      = "ParentFolder"
+vm_template             = "NameOfVMTemplate"
+vm_gateway              = "10.10.10.1"
+vm_network              = "NameOfPortGroup"
+vm_name_base            = "ParentVMName"
+vm_parent_ip            = "10.10.10.9"
+vm_parent_hostname      = "parent0"
+vm_netmask              = "24"
+vm_domain               = "fqdn.example"
+vm_children_are_linked_clones = true
+client_list             = [
+  {name = "Child-VM-0", ip = "10.10.10.10", hostname = "child0"},
+  {name = "Child-VM-1", ip = "10.10.10.11", hostname = "child1"},
+  {name = "Child-VM-2", ip = "10.10.10.12", hostname = "child2"},
+  {name = "Child-VM-3", ip = "10.10.10.13", hostname = "child3"},
+  {name = "Child-VM-4", ip = "10.10.10.14", hostname = "child4"},
+]
+#Copy last line of client_list will create more, delete last line for less

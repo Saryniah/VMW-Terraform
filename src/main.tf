@@ -75,9 +75,12 @@ resource "vsphere_virtual_machine" "primary_vm"{
     thin_provisioned = data.vsphere_virtual_machine.template.disks.0.thin_provisioned
   }
 
-  clone{
+  wait_for_guest_ip_timeout = 0
+  wait_for_guest_net_timeout = 0
+
+  clone {
     template_uuid = data.vsphere_virtual_machine.template.id
-    linked_clone = var.vm_linked_clone
+    linked_clone = false
   }
 
   lifecycle{
@@ -121,17 +124,18 @@ resource "vsphere_virtual_machine" "child_vm"{
 
   clone{
     template_uuid = vsphere_virtual_machine_snapshot.primary_vm_snapshot.virtual_machine_uuid
-    linked_clone = "true"
+    linked_clone = var.vm_children_are_linked_clones
     customize {
       linux_options {
         host_name = each.value.hostname
-        domain = "hoidsramenshop.com"
+        domain = var.vm_domain
+        
       }
       network_interface {
         ipv4_address = each.value.ip
-        ipv4_netmask = 24
+        ipv4_netmask = var.vm_netmask
       }
-      ipv4_gateway = "10.10.50.1"
+      ipv4_gateway = var.vm_gateway
 
     }
   }

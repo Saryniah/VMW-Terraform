@@ -38,15 +38,39 @@ variable "vm_name_base"{
   type        = string
 }
 
-variable "vm_linked_clone"{
-  description = "Is the VM a linked Clone?"
+variable "vm_children_are_linked_clones"{
+  description = "Are the kids linked clones?"
   type        = bool
 }
 
 variable "parent_folder_name"{
   description = "Project Parent Folder Name"
   type        = string
-  default     = "Parent"
+}
+
+variable "vm_gateway" {
+  description = "Project VM's Network Gateway"
+  type        = string
+}
+
+variable "vm_parent_hostname"{
+  description = "Project Parent VM's hostname"
+  type = string
+}
+
+variable "vm_parent_ip" {
+  description = "Project Parent VM's IP"
+  type        = string
+}
+
+variable "vm_netmask" {
+  description = "Project VM's Network netmask"
+  type        = string
+}
+
+variable "vm_domain" {
+  description = "Project VM's domain name"
+  type        = string
 }
 
 variable "client_list" {
