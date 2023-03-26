@@ -69,7 +69,7 @@ resource "vsphere_virtual_machine" "primary_vm"{
   }
 
   disk{
-    label = "${var.vm_name_base}.vmdk"
+    label = "${var.vm_name_base}.vmdk1"
     size = data.vsphere_virtual_machine.template.disks.0.size
     eagerly_scrub = data.vsphere_virtual_machine.template.disks.0.eagerly_scrub
     thin_provisioned = data.vsphere_virtual_machine.template.disks.0.thin_provisioned
