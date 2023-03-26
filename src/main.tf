@@ -53,53 +53,7 @@ resource "vsphere_folder" "parent" {
   datacenter_id = data.vsphere_datacenter.dc.id
 }
 
-resource "vsphere_virtual_machine" "primary_vm"{
-  name          = var.vm_name_base
-  folder        = vsphere_folder.parent.path
-  resource_pool_id = data.vsphere_host.host.resource_pool_id
-  datastore_id  = data.vsphere_datastore.disks.id
-  num_cpus      = data.vsphere_virtual_machine.template.num_cpus
-  memory        = data.vsphere_virtual_machine.template.memory
-  firmware      = data.vsphere_virtual_machine.template.firmware
-  guest_id      = data.vsphere_virtual_machine.template.guest_id
-
-  network_interface {
-    network_id = data.vsphere_network.network.id
-    adapter_type = data.vsphere_virtual_machine.template.network_interface_types[0]
-  }
-
-  disk{
-    label = "${var.vm_name_base}.vmdk"
-    size = data.vsphere_virtual_machine.template.disks.0.size
-    eagerly_scrub = data.vsphere_virtual_machine.template.disks.0.eagerly_scrub
-    thin_provisioned = data.vsphere_virtual_machine.template.disks.0.thin_provisioned
-  }
-
-  wait_for_guest_ip_timeout = 0
-  wait_for_guest_net_timeout = 0
-
-  clone {
-    template_uuid = data.vsphere_virtual_machine.template.id
-    linked_clone = false
-  }
-
-  lifecycle{
-    ignore_changes = []
-  }
-
-}
-
-resource "vsphere_virtual_machine_snapshot" "primary_vm_snapshot" {
-  virtual_machine_uuid = vsphere_virtual_machine.primary_vm.uuid
-  snapshot_name = "Primary VM"
-  description = "Primary VM Initial State"
-  memory = true
-  quiesce = true
-  remove_children = true
-  consolidate = true
-}
-
-resource "vsphere_virtual_machine" "child_vm"{
+resource "vsphere_virtual_machine" "machines"{
   for_each      = {for each in var.client_list : each.name => each}
   name          = each.value.name
   folder        = vsphere_folder.parent.path
@@ -122,9 +76,9 @@ resource "vsphere_virtual_machine" "child_vm"{
     thin_provisioned = data.vsphere_virtual_machine.template.disks.0.thin_provisioned
   }
 
-  clone{
-    template_uuid = vsphere_virtual_machine_snapshot.primary_vm_snapshot.virtual_machine_uuid
-    linked_clone = var.vm_children_are_linked_clones
+  clone {
+    template_uuid = data.vsphere_virtual_machine.template.id
+    linked_clone = false
     customize {
       linux_options {
         host_name = each.value.hostname
